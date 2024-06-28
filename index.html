@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Caesar's Cipher</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+	<style>
+		.margin-5 {
+			margin-left: 5%;
+		}
+	</style>
+</head>
+
+<body>
+	<div style="height: 100vh; display: flex;">
+		<div style="border: 1px solid rgb(0, 0, 0); height: 90%; width: 30%; margin: auto; background-color: #02b7b7;">
+            <div style="background-color: aliceblue;">
+                <p class="margin-5" style="font-weight: bolder; font-size: xx-large;">Guess the cipher</p>
+                <hr style="margin: 1%; color: rgb(43, 2, 124); height: 5px; background-color: rgb(255,0,0);border: 0;">
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <p class="margin-5"> Enter a text message</p>
+                    <input class="margin-5" id="userInput">
+                    <p class="margin-5"> Encrypted message</p>
+                    <input class="margin-5" id="encryptedMessage" disabled>
+                    <p></p>
+                </div>
+                <div class="col-6">
+                    <p>No of Chances <span id="noOfGuesses"></span></p>
+                    
+                    <p> Your best: <span id="bestGuesses"></span></p>
+                </div>
+            </div>
+            <input class="margin-5" id="enteredNumber" type="number" placeholder="Enter a number..."> 
+            <button id="guessButton" style="margin: 5%;">Guess!</button>
+            <p class="margin-5" id="results"></p>
+		</div>
+	</div>
+
+	<script>
+		let userInput = document.querySelector("#userInput");
+        let guessNumber = 0;
+		let textInput = userInput.value;
+		let numberToGuess;
+        let bestGuesses = '-';
+		function setNumberToGuess() {
+			numberToGuess = getRandomNumber(0, 26);
+		}
+		setNumberToGuess();
+		userInput.addEventListener("input", characterEntered, false);
+        
+		function getRandomNumber(low, high) {
+            let r = Math.floor(Math.random() * (high - low + 1)) + low;
+            let localData = JSON.parse(localStorage.getItem('data'));
+            if(localData && localData.guessChances) {
+                bestGuesses = localData.guessChances
+            } 
+            setNoOfGuesses();
+			return r;
+		}
+        function setNoOfGuesses() {
+            document.getElementById("noOfGuesses").innerHTML = guessNumber
+            document.getElementById("bestGuesses").innerHTML = bestGuesses
+        }
+
+		function characterEntered(e) {
+			textInput = e.target.value;
+			textInput = textInput.toLowerCase();
+			textInput = textInput.replace(/[^a-z]/, '');
+
+			e.target.value = textInput;
+
+			// Let's get the party started!
+			startEncryption();
+            setNoOfGuesses();
+		}
+
+		function startEncryption() {
+			let encryptedMessage = "";
+			let shift = numberToGuess;
+
+			for (letter of textInput) {
+				encryptedMessage += shiftLetter(letter, shift);
+			}
+			document.getElementById("encryptedMessage").value = encryptedMessage
+
+		}
+		startEncryption();
+
+		function shiftLetter(letter, shift) {
+			let newLetter = "";
+
+			let letterCode = letter.charCodeAt(0);
+			let newLetterCode = letterCode + shift;
+
+			if (newLetterCode < 97) {
+				// If new letter goes below "a" aka character code 97
+				newLetterCode += 26;
+			} else if (newLetterCode > 122) {
+				// If new letter goes past "z" aka character code 122
+				newLetterCode -= 26;
+			}
+
+			newLetter = String.fromCharCode(newLetterCode);
+
+			return newLetter;
+		}
+		startEncryption();
+        let results = document.querySelector("#results");
+
+		function resetGame() {
+			window.location.reload();
+		}
+
+		function checkNumber() {
+            guessNumber++;
+		    let enteredNumber = document.querySelector("#enteredNumber").value;
+			if (enteredNumber == numberToGuess) {
+				let message = `<p>----- New Game Time -----</p>
+                       <p>🎉 Your guess of ${enteredNumber} is <b>correct</b>!</p>
+					   <button id="newGame" style="margin: 5%;">New Game!</button>
+                       <p>-------------------------<p>`;
+
+				results.insertAdjacentHTML("afterbegin", message);
+                localStorage.setItem('data', JSON.stringify({guessChances:guessNumber}));
+                guessNumber = 0;
+				let newGameButton = document.querySelector("#newGame");
+        		newGameButton.addEventListener("click", resetGame, false);
+                setNumberToGuess();
+                startEncryption();
+				return;
+			}
+
+			if (enteredNumber < numberToGuess) {
+				let message = `<p>⚓ Your guess of ${enteredNumber} is <b>too low</b>!</p>`;
+
+				results.insertAdjacentHTML("afterbegin", message);
+			}
+
+			if (enteredNumber > numberToGuess) {
+				let message = `<p>🎈 Your guess of ${enteredNumber} is <b>too high</b>!</p>`;
+
+				results.insertAdjacentHTML("afterbegin", message);
+			}
+            setNoOfGuesses();
+		}
+        let guessButton = document.querySelector("#guessButton");
+        guessButton.addEventListener("click", checkNumber, false);
+        
+
+	</script>
+</body>
+
+</html>
